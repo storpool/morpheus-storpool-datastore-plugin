@@ -16,21 +16,23 @@
 package com.storpool.storage
 
 import com.morpheusdata.core.Plugin
+import groovy.util.logging.Slf4j
 
+@Slf4j
 class StorPoolPlugin extends Plugin {
 
     @Override
     String getCode() {
-        return 'morpheus-storpool-datastore-plugin'
+        log.info("StorPool getCode");
+        return 'storpool'
     }
 
     @Override
     void initialize() {
-        this.setName("morpheus-storpool-datastore-plugin")
-        
-		
-		this.registerProvider(new StorPoolStorageProvider(this,this.morpheus))
-			this.registerProvider(new StorPoolDatastoreTypeProvider(this,this.morpheus))
+        log.info("StorPool initialize");
+        this.setName("StorPool");
+		this.registerProvider(new StorPoolStorageProvider(this, this.morpheus))
+        this.registerProvider(new StorPoolDatastoreTypeProvider(this, this.morpheus))
     }
 
     /**
@@ -38,6 +40,7 @@ class StorPoolPlugin extends Plugin {
      */
     @Override
     void onDestroy() {
+        log.info("StorPool destroy");
         //nothing to do for now
     }
 }

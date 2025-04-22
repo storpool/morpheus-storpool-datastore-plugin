@@ -28,16 +28,19 @@ import com.morpheusdata.model.StorageServerType
 import com.morpheusdata.model.StorageVolume
 import com.morpheusdata.model.StorageVolumeType
 import com.morpheusdata.response.ServiceResponse
+import groovy.util.logging.Slf4j
 
-class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes{
+@Slf4j
+class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes {
 
-	public static final String STORAGE_PROVIDER_CODE = 'morpheus-storpool-datastore-plugin.storage'
+	public static final String STORAGE_PROVIDER_CODE = 'storpool.storage'
 
 
 	protected MorpheusContext morpheusContext
 	protected Plugin plugin
 
 	StorPoolStorageProvider(Plugin plugin, MorpheusContext morpheusContext) {
+		log.info("StorPool StorPoolStorageProvider");
 		this.morpheusContext = morpheusContext
 		this.plugin = plugin
 	}
@@ -48,7 +51,8 @@ class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes
 	 */
 	@Override
 	String getDescription() {
-		return 'This is a custom storage provider for morpheus-storpool-datastore-plugin'
+		log.info("StorPool getDescription");
+		return 'This is a custom storage provider for StorPool'
 	}
 
 	/**
@@ -57,6 +61,7 @@ class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes
 	 */
 	@Override
 	Icon getIcon() {
+		log.info("StorPool getIcon");
 		return new Icon(path:"morpheus.svg", darkPath: "morpheus.svg")
 	}
 
@@ -68,18 +73,50 @@ class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes
 	 */
 	@Override
 	StorageServerType getStorageServerType() {
+		log.info("StorPool getStorageServerType");
+
 		StorageServerType storageServerType = new StorageServerType(
                         code: getCode(), name: getName(), description: getDescription(), hasBlock: true, hasObject: false,
                         hasFile: false, hasDatastore: true, hasNamespaces: false, hasGroups: false, hasDisks: true, hasHosts: false,
                         createBlock: true, createObject: false, createFile: false, createDatastore: true, createNamespaces: false,
-                        createGroup: false, createDisk: true, createHost: false, hasFileBrowser: true)
-                storageServerType.optionTypes = getStorageServerOptionTypes()
-                storageServerType.volumeTypes = getStorageVolumeTypes()
-                return storageServerType
+                        createGroup: false, createDisk: true, createHost: false, hasFileBrowser: true);
+
+		storageServerType.setOptionTypes(getStorageServerOptionTypes());
+		storageServerType.setVolumeTypes(getStorageVolumeTypes());
+		return storageServerType
 	}
 
 	Collection<OptionType> getStorageServerOptionTypes() {
-        return []
+		log.info("StorPool getStorageServerOptionTypes");
+		Collection<OptionType> options = []
+		options << new OptionType(
+				name:'API Host',
+				code:'storpool.plugin.apiUrl',
+				displayOrder:1,
+				fieldLabel:'API Host',
+				fieldName: 'serviceHost',
+				inputType: OptionType.InputType.TEXT,
+				required: true
+		)
+		options << new OptionType(
+				name:'API Port',
+				code:'storpool.plugin.apiPort',
+				displayOrder:2,
+				fieldLabel:'API Port',
+				fieldName: 'servicePort',
+				inputType: OptionType.InputType.TEXT,
+				required: true
+		)
+		options << new OptionType(
+				name:'API Token',
+				code:'storpool.plugin.apiToken',
+				displayOrder:3,
+				fieldLabel:'API Token',
+				fieldName: 'serviceToken',
+				inputType: OptionType.InputType.TEXT,
+				required: true
+		)
+		return options;
 	}
 
 	/**
@@ -94,6 +131,10 @@ class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes
 	 */
 	@Override
 	ServiceResponse verifyStorageServer(StorageServer storageServer, Map opts) {
+		log.info("StorPool verifyStorageServer");
+		log.info("StorPool verifyStorageServer storage server {}", storageServer.getType());
+		log.info("StorPool verifyStorageServer options {}", opts)
+
 		return ServiceResponse.success()
 	}
 
@@ -106,6 +147,10 @@ class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes
 	 */
 	@Override
 	ServiceResponse initializeStorageServer(StorageServer storageServer, Map opts) {
+		log.info("StorPool initializeStorageServer");
+		log.info("StorPool initializeStorageServer storage server {}", storageServer.getType());
+		log.info("StorPool initializeStorageServer options {}", opts)
+
 		return ServiceResponse.success()
 	}
 
@@ -118,6 +163,8 @@ class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes
 	 */
 	@Override
 	ServiceResponse refreshStorageServer(StorageServer storageServer, Map opts) {
+		log.info("StorPool refreshStorageServer");
+
 		return ServiceResponse.success()
 	}
 
@@ -128,6 +175,8 @@ class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes
 	 */
 	@Override
 	MorpheusContext getMorpheus() {
+		log.info("StorPool getMorpheus");
+
 		return this.@morpheusContext
 	}
 
@@ -137,6 +186,8 @@ class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes
 	 */
 	@Override
 	Plugin getPlugin() {
+		log.info("StorPool getPlugin");
+
 		return this.@plugin
 	}
 
@@ -147,6 +198,8 @@ class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes
 	 */
 	@Override
 	String getCode() {
+		log.info("StorPool getCode");
+
 		return STORAGE_PROVIDER_CODE
 	}
 
@@ -158,26 +211,42 @@ class StorPoolStorageProvider implements StorageProvider, StorageProviderVolumes
 	 */
 	@Override
 	String getName() {
-		return "morpheus-storpool-datastore-plugin Storage Provider"
+		log.info("StorPool getName");
+
+		return "StorPool Storage Provider"
 	}
 
 	@Override
 	ServiceResponse<StorageVolume> createVolume(StorageGroup storageGroup, StorageVolume storageVolume, Map opts) {
+		log.info("StorPool createVolume");
+		//TODO:
+		// There is a `createVolume` method in the DatastoreType provider - what is the difference between these two methods and when each is invoked
 		return null
 	}
 
 	@Override
 	ServiceResponse<StorageVolume> resizeVolume(StorageGroup storageGroup, StorageVolume storageVolume, Map opts) {
+		log.info("StorPool resizeVolume");
+		//TODO:
+		// There is a `resizeVolume` method in the DatastoreType provider - what is the difference between these two methods and when each is invoked?
+
 		return null
 	}
 
 	@Override
 	ServiceResponse<StorageVolume> deleteVolume(StorageGroup storageGroup, StorageVolume storageVolume, Map opts) {
+		log.info("StorPool deleteVolume");
+		//TODO:
+		// There is a `removeVolume` method in the DatastoreType provider - what is the difference between these two methods and when each is invoked?
+
 		return null
 	}
 
 	@Override
 	Collection<StorageVolumeType> getStorageVolumeTypes() {
+		log.info("StorPool getStorageVolumeTypes");
+		//TODO
+		// Do all storage providers have to implement this? What information should we provide?
 		return []
 	}
 }

@@ -24,19 +24,24 @@ import com.morpheusdata.model.ComputeServerGroup
 import com.morpheusdata.model.Datastore
 import com.morpheusdata.model.OptionType
 import com.morpheusdata.model.Snapshot
+import com.morpheusdata.model.StorageServer
 import com.morpheusdata.model.StorageVolume
 import com.morpheusdata.model.VirtualImage
 import com.morpheusdata.response.ServiceResponse
+import com.storpool.storage.util.StorPoolUtil
+import groovy.util.logging.Slf4j
 
-class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreTypeProvider.MvmProvisionFacet, com.morpheusdata.core.providers.DatastoreTypeProvider.SnapshotFacet.SnapshotServerFacet {
+@Slf4j
+class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreTypeProvider.MvmProvisionFacet, DatastoreTypeProvider.SnapshotFacet, DatastoreTypeProvider.SnapshotFacet.SnapshotServerFacet, GroovyObject {
 
-	public static final String DATASTORE_TYPE_PROVIDER_CODE = 'morpheus-storpool-datastore-plugin.datastore'
+	public static final String DATASTORE_TYPE_PROVIDER_CODE = 'storpool.datastore'
 
 	protected MorpheusContext context
 	protected Plugin plugin
 
 	public StorPoolDatastoreTypeProvider(Plugin plugin, MorpheusContext ctx) {
 		super()
+
 		this.@context = ctx
 		this.@plugin = plugin
 	}
@@ -46,7 +51,8 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	String getProvisionTypeCode() {
-		return 'morpheus-storpool-datastore-plugin.provision'
+		log.info("StorPool getProvisionTypeCode")
+		return 'storpool.provision'
 	}
 
 	/**
@@ -56,7 +62,9 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	String getStorageProviderCode() {
-		return 'morpheus-storpool-datastore-plugin.storage'
+
+		log.info("StorPool getStorageProviderCode")
+		return 'storpool.storage'
 	}
 
 	/**
@@ -65,9 +73,66 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	List<OptionType> getOptionTypes() {
+		log.info("StorPool getOptionTypes")
 		Collection<OptionType> options = []
-        		// TODO: create some option types for the datastore and add them to collection
-        		return options
+		options << new OptionType(
+				name: "StorPool Storage Server",
+				code: "sp-datastore-storage-server",
+				displayOrder: Integer.valueOf(0),
+				fieldContext: "domain",
+				fieldLabel: "StorPool Storage Server",
+				fieldCode: "storpool.label.storageServer",
+				fieldName: "storageServer.id",
+				inputType: OptionType.InputType.SELECT,
+				required: true,
+				optionSource: "storageServers"
+		)
+		options << new OptionType(
+				name:'SP template',
+				code:'storpool.plugin.template',
+				displayOrder: Integer.valueOf(1),
+				fieldLabel:'SP template',
+				fieldName: 'template',
+				inputType: OptionType.InputType.TEXT,
+				required: true
+		)
+//		options << new OptionType(
+//				name:'API Host',
+//				code:'storpool.plugin.apiUrl',
+//				displayOrder:1,
+//				fieldLabel:'API Host',
+//				fieldName: 'serviceHost',
+//				inputType: OptionType.InputType.TEXT,
+//				required: true
+//		)
+//		options << new OptionType(
+//				name:'API Port',
+//				code:'storpool.plugin.apiPort',
+//				displayOrder:2,
+//				fieldLabel:'API Port',
+//				fieldName: 'servicePort',
+//				inputType: OptionType.InputType.TEXT,
+//				required: true
+//		)
+//		options << new OptionType(
+//				name:'API Token',
+//				code:'storpool.plugin.apiToken',
+//				displayOrder:3,
+//				fieldLabel:'API Token',
+//				fieldName: 'serviceToken',
+//				inputType: OptionType.InputType.TEXT,
+//				required: true
+//		)
+//		options << new OptionType(
+//				name:'SP template',
+//				code:'storpool.plugin.template',
+//				displayOrder:4,
+//				fieldLabel:'SP template',
+//				fieldName: 'template',
+//				inputType: OptionType.InputType.TEXT,
+//				required: true
+//		)
+		return options
 	}
 
 	/**
@@ -76,6 +141,7 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	boolean getCreatable() {
+		log.info("StorPool getCreatable")
 		return true
 	}
 
@@ -85,6 +151,7 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	boolean getEditable() {
+		log.info("StorPool getEditable")
 		return true
 	}
 
@@ -94,6 +161,7 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	boolean getRemovable() {
+		log.info("StorPool getRemovable")
 		return true
 	}
 
@@ -108,6 +176,8 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse removeVolume(StorageVolume volume, ComputeServer server, boolean removeSnapshots, boolean force) {
+		log.info("StorPool StorageVolume {}, ComputeServer {}", volume, server)
+
 		return ServiceResponse.error("Not Implemented")
 	}
 
@@ -120,6 +190,10 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse<StorageVolume> createVolume(StorageVolume volume, ComputeServer server) {
+		log.info("StorPool StorageVolume {}, ComputeServer {}", volume, server)
+		//TODO:
+		// In which cases this method is invoked? Only with the API call create volume or if we keep a cache of a cloned volumes/ create volume from a snapshot?
+
 		return ServiceResponse.error("Not Implemented")
 	}
 
@@ -142,6 +216,12 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse<StorageVolume> cloneVolume(StorageVolume volume, ComputeServer server, StorageVolume sourceVolume) {
+		log.info("StorPool cloneVolume");
+		//TODO:
+		// IS this method invoked each time a new virtual machine is created from the same image?
+		// Can we keep a cached copy on the Data Store for future virtual machines?
+		// If we could keep a cached copy from the respective storage provider, where should we set it (directly in the DB or property of a specific object)?
+
 		return ServiceResponse.error("Not Implemented")
 	}
 
@@ -154,6 +234,7 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse<StorageVolume> resizeVolume(StorageVolume volume, ComputeServer server, Long newSize) {
+		log.info("StorPool resizeVolume");
 		return ServiceResponse.error("Not Implemented")
 	}
 
@@ -165,7 +246,29 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse<Datastore> createDatastore(Datastore datastore) {
-		return ServiceResponse.error("Not Implemented")
+		log.info("StorPool createDatastore");
+		log.info("StorPool Datastore {}", datastore.toString());
+		log.info("StorPool {}", datastore.getConfig());
+		if (datastore == null || datastore.getStorageServer() == null) {
+			 ServiceResponse.error("Could not find data store or server storage");
+		}
+		ServiceResponse.prepare(datastore);
+		try {
+			StorPoolUtil.StorPoolConnection conn = new StorPoolUtil.StorPoolConnection(datastore.getStorageServer().getConfigProperty("serviceHost"), datastore.getStorageServer().getConfigProperty("servicePort"), datastore.getStorageServer().getConfigProperty("serviceToken"), datastore.getConfigProperty("template"));
+
+			boolean resp = StorPoolUtil.templateExists(conn);
+			if (!resp) {
+                ServiceResponse.error("Could not create data store");
+            }
+		} catch (Exception ex) {
+			return ServiceResponse.error("Could not create data store {}", ex);
+		}
+		//TODO:
+		// We need to connect the pool to the hypervisor.
+		// c.m.h.KvmBaseHostService - Matching Hypervisor not found for pool: test : Online Hypervisor Count: 1 - []
+
+		log.info("Successfully created datastore on template {}", datastore.getConfigProperty("template"));
+		return ServiceResponse.success(datastore);
 	}
 
 	/**
@@ -176,12 +279,15 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse removeDatastore(Datastore datastore) {
-		return ServiceResponse.error("Not Implemented")
+		log.info("StorPool removeDatastore");
+		return ServiceResponse.success(datastore)
 	}
 
 	/**
-	 * Clones a volume based on a source being the reference to the actual File in the Virtual Image. This can be called in the event there is no image cache or we need to directly stream to an image target.
-	 * Remember, this code runs in the manager or morpheus appliance and not on the host itself. In order to stream contents directly to the target , we need to create a link we can fetch using the {@link com.morpheusdata.core.MorpheusFileCopyService}
+	 * Clones a volume based on a source being the reference to the actual File in the Virtual Image.
+	 * This can be called in the event there is no image cache or we need to directly stream to an image target.
+	 * Remember, this code runs in the manager or morpheus appliance and not on the host itself.
+	 * In order to stream contents directly to the target , we need to create a link we can fetch using the {@link com.morpheusdata.core.MorpheusFileCopyService}
 	 * @see com.morpheusdata.core.MorpheusFileCopyService* @see com.morpheusdata.core.synchronous.MorpheusSynchronousFileCopyService* @param volume the volume we are creating and cloning into
 	 * @param server the server the volume is associated with (typically the workload/vm)
 	 * @param virtualImage the virtual image this volume is being cloned out of
@@ -190,6 +296,9 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse<StorageVolume> cloneVolume(StorageVolume volume, ComputeServer server, VirtualImage virtualImage, com.bertramlabs.plugins.karman.CloudFileInterface cloudFile) {
+		log.info("StorPool cloneVolume")
+		//TODO:
+		// In which cases this method is invoked?
 		return ServiceResponse.error("Not Implemented")
 	}
 
@@ -202,6 +311,7 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse<StorageVolume> prepareHostForVolume(ComputeServerGroup cluster, ComputeServer server, StorageVolume volume) {
+		log.info("StorPool prepareHostForVolume");
 		return ServiceResponse.error("Not Implemented")
 	}
 
@@ -216,6 +326,7 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse<MvmDiskConfig> buildDiskConfig(ComputeServerGroup cluster, ComputeServer server, StorageVolume volume) {
+		log.info("StorPool buildDiskConfig")
 		return ServiceResponse.error("Not Implemented")
 	}
 
@@ -228,6 +339,7 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse<StorageVolume> releaseVolumeFromHost(ComputeServerGroup cluster, ComputeServer server, StorageVolume volume) {
+		log.info("StorPool releaseVolumeFromHost")
 		return ServiceResponse.error("Not Implemented")
 	}
 
@@ -244,6 +356,8 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse<Snapshot> createSnapshot(ComputeServer server, Boolean forBackup, Boolean forExport) {
+		log.info("StorPool createSnapshot")
+
 		return ServiceResponse.error("Not Implemented")
 	}
 
@@ -257,6 +371,8 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse<Snapshot> revertSnapshot(ComputeServer server, Snapshot snapshot) {
+		log.info("StorPool revertSnapshot")
+
 		return ServiceResponse.error("Not Implemented")
 	}
 
@@ -269,6 +385,8 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	ServiceResponse removeSnapshot(ComputeServer server, Snapshot snapshot) {
+		log.info("StorPool removeSnapshot")
+
 		return ServiceResponse.error("Not Implemented")
 	}
 
@@ -279,6 +397,8 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	MorpheusContext getMorpheus() {
+		log.info("StorPool getMorpheus")
+
 		return this.@context
 	}
 
@@ -288,6 +408,7 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	Plugin getPlugin() {
+		log.info("StorPool getPlugin");
 		return this.@plugin
 	}
 
@@ -298,6 +419,7 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	String getCode() {
+		log.info("StorPool getCode");
 		return DATASTORE_TYPE_PROVIDER_CODE
 	}
 
@@ -309,6 +431,36 @@ class StorPoolDatastoreTypeProvider implements DatastoreTypeProvider, DatastoreT
 	 */
 	@Override
 	String getName() {
-		return 'morpheus-storpool-datastore-plugin Datastore'
+		log.info("StorPool getName")
+
+		return 'StorPool Datastore'
+	}
+
+	@Override
+	ServiceResponse<Snapshot> createSnapshot(StorageVolume volume) {
+		log.info("StorPool createSnapshot")
+
+		return null
+	}
+
+	@Override
+	ServiceResponse removeSnapshot(StorageVolume volume) {
+		log.info("StorPool removeSnapshot")
+
+		return null
+	}
+
+	@Override
+	ServiceResponse<Snapshot> listSnapshots(StorageServer storageServer) {
+		log.info("StorPool listSnapshots")
+
+		return null
+	}
+
+	@Override
+	ServiceResponse<StorageVolume> cloneVolume(StorageVolume volume, Snapshot sourceSnapshot) {
+		log.info("StorPool cloneVolume from snapshot")
+
+		return null
 	}
 }
